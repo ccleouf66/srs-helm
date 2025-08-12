@@ -11,10 +11,12 @@ spec:
       port: {{ .Values.service.rtmp }}
       targetPort: 1935
       protocol: TCP
+    {{- if not .Values.ingress.enabled }}
     - name: http
       port: {{ .Values.service.http }}
       targetPort: 8080
       protocol: TCP
+    {{- end }}
     - name: api
       port: {{ .Values.service.api }}
       targetPort: 1985

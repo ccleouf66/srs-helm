@@ -1,0 +1,15 @@
+{{- if .Values.config -}}
+{{- $config := .Values.config -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "srs.fullname" . }}
+  labels:
+    app: {{ include "srs.name" . }}
+    app.kubernetes.io/name: {{ include "srs.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    {{- include "srs.labels" . | nindent 4 }}
+data:
+  srs.conf: |
+    {{- $config | nindent 4 }}
+{{- end -}}

@@ -16,6 +16,81 @@ image:
 
 replicaCount: 1
 
+config: |
+  listen              1935;
+  max_connections     1000;
+  daemon              off;
+
+  srs_log_tank        console;
+  srs_log_level       info;
+
+  vhost live {
+      tcp_nodelay     on;
+
+      ingest obs_rts {
+          enabled      on;
+          input        rts://0.0.0.0:10080/live/stream;
+          ffmpeg       /usr/bin/ffmpeg;
+
+          engine raw_copy {
+              enabled  on;
+              vcodec   copy;
+              acodec   copy;
+              format   flv;
+              output   rtmp://127.0.0.1/live/original;
+          }
+      }
+
+      transcode youtube {
+          enabled  on;
+          ffmpeg   /usr/bin/ffmpeg;
+          engine yt_passthrough {
+              enabled  on;
+              vcodec   copy;
+              acodec   copy;
+              format   flv;
+              output   rtmp://a.rtmp.youtube.com/live2/YOUR_YOUTUBE_KEY;
+          }
+      }
+
+      transcode twitch {
+          enabled  on;
+          ffmpeg   /usr/bin/ffmpeg;
+          engine twitch_1080p60 {
+              enabled  on;
+              vfilter "zscale=t=linear:npl=100,format=gbrpf32le,tonemap=hable:desat=0,zscale=p=bt709:t=bt709:m=bt709:r=tv,format=yuv420p";
+              vcodec   libx264;
+              vprofile high;
+              vpreset  veryfast;
+              vbitrate 6000;
+              vfps     60;
+              vbufsize 6000;
+              acodec   aac;
+              abitrate 160;
+              asample_rate 48000;
+              format   flv;
+              output   rtmp://live.twitch.tv/app/YOUR_TWITCH_KEY;
+          }
+      }
+
+      hls {
+          enabled         on;
+          hls_fragment    1;
+          hls_window      5;
+          hls_path        ./objs/nginx/html;
+          hls_m3u8_file   [app]/[stream].m3u8;
+          hls_ts_file     [app]/[stream]-[seq].ts;
+      }
+
+      webrtc {
+          enabled     on;
+          listen      8000;
+          tcp_nodelay on;
+      }
+  }
+  
+# config: {} 
+
 # The configuration for SRS can be overridden by environment variables.
 # See https://github.com/ossrs/srs/blob/develop/trunk/conf/full.conf
 conf:
